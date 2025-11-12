@@ -475,6 +475,7 @@ body {
     align-items: center;
     gap: 12px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
 .sidebar-header i {
@@ -484,6 +485,7 @@ body {
 
 .sidebar-header h2 {
     font-size: 24px;
+    flex: 1;
 }
 
 .sidebar-nav {
@@ -1355,19 +1357,114 @@ body {
     font-size: 16px;
 }
 
+/* ===== MOBILE MENU TOGGLE ===== */
+.btn-menu-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border: none;
+    background: var(--light-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text-primary);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-menu-toggle:hover {
+    background: var(--border-color);
+}
+
+.btn-close-sidebar {
+    display: none;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: auto;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-close-sidebar:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-header {
+    position: relative;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     :root {
         --sidebar-width: 0;
     }
 
+    .btn-menu-toggle {
+        display: flex;
+    }
+
+    .btn-close-sidebar {
+        display: flex;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 20px;
+    }
+
     .sidebar {
         transform: translateX(-100%);
-        transition: transform 0.3s;
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .sidebar.active {
         transform: translateX(0);
+    }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        backdrop-filter: blur(2px);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    /* Prevent body scroll when sidebar is open on mobile */
+    body.sidebar-open {
+        overflow: hidden;
     }
 
     .main-content {
@@ -1376,30 +1473,61 @@ body {
 
     .top-bar {
         padding: 16px 20px;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .top-bar .btn-primary {
+        flex: 1;
+        max-width: none;
+        padding: 12px 16px;
+        font-size: 14px;
     }
 
     .view {
-        padding: 20px;
+        padding: 20px 16px;
+    }
+
+    .view h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
     }
 
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    .stat-info h3 {
+        font-size: 28px;
     }
 
     .charts-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .chart-container {
-        height: 320px;
+        height: 300px;
+        padding: 20px;
     }
 
     .chart-container.chart-full-width {
-        height: 350px;
+        height: 320px;
     }
 
     .chart-container.chart-full-width canvas {
-        max-height: 270px;
+        max-height: 250px;
     }
 
     .form-row {
@@ -1408,6 +1536,76 @@ body {
 
     .filters {
         flex-direction: column;
+        gap: 16px;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .tasks-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .tasks-header h1 {
+        margin-bottom: 0;
+    }
+
+    #tasksView .search-bar {
+        max-width: 100%;
+        margin-bottom: 0;
+    }
+
+    .task-item {
+        padding: 16px;
+    }
+
+    .task-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .task-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .task-title {
+        font-size: 16px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .task-description {
+        font-size: 13px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .task-meta {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .task-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+
+    .task-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 14px;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .calendar-content-wrapper {
@@ -1415,31 +1613,223 @@ body {
         gap: 16px;
     }
 
-    .calendar-grid {
-        padding: 12px;
+    .calendar-header-wrapper {
+        margin-bottom: 12px;
     }
 
-    .calendar-day {
-        font-size: 11px;
-        padding: 3px;
+    .calendar-header-wrapper > div {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch !important;
+    }
+
+    .calendar-header-wrapper h1 {
+        font-size: 24px !important;
+        margin: 0 !important;
+    }
+
+    .calendar-controls {
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .calendar-controls h2 {
+        font-size: 18px;
+        min-width: auto;
+        flex: 1;
+    }
+
+    .calendar-grid {
+        padding: 12px 8px;
+        min-height: auto;
+    }
+
+    .calendar-weekdays {
+        gap: 4px;
+        margin-bottom: 4px;
     }
 
     .calendar-weekday {
         font-size: 11px;
-        padding: 4px 2px;
+        padding: 6px 2px;
+    }
+
+    .calendar-days {
+        gap: 4px;
+        min-height: auto;
+    }
+
+    .calendar-day {
+        font-size: 12px;
+        padding: 8px 4px;
+        min-height: 60px;
     }
 
     .calendar-tasks {
         height: auto;
-        max-height: 300px;
+        max-height: 400px;
+        min-height: 300px;
+        padding: 16px;
+    }
+
+    .calendar-tasks h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
     }
 
     #calendarView {
         height: auto;
+        min-height: auto;
+    }
+
+    .calendar-tasks .task-item {
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+
+    .calendar-tasks .task-meta {
+        gap: 6px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        padding: 24px 20px;
+        margin: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        width: 100%;
     }
 
     .auth-box {
-        padding: 24px;
+        padding: 24px 20px;
+        max-width: 100%;
+    }
+
+    .auth-header h1 {
+        font-size: 28px;
+    }
+
+    .auth-header i {
+        font-size: 40px;
+    }
+
+    .auth-form h2 {
+        font-size: 20px;
+    }
+
+    .divider {
+        margin: 20px 0;
+    }
+
+    .auth-tabs {
+        margin-bottom: 20px;
+    }
+
+    .reminder-modal {
+        width: 95%;
+        max-width: 95%;
+        padding: 24px 20px;
+    }
+
+    .reminder-header i {
+        font-size: 40px;
+    }
+
+    .reminder-header h2 {
+        font-size: 20px;
+    }
+}
+
+/* Additional mobile fixes for very small screens */
+@media (max-width: 480px) {
+    .view {
+        padding: 16px 12px;
+    }
+
+    .top-bar {
+        padding: 12px 16px;
+    }
+
+    .stat-card {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+
+    .stat-info h3 {
+        font-size: 24px;
+    }
+
+    .chart-container {
+        height: 280px;
+        padding: 16px;
+    }
+
+    .chart-container.chart-full-width {
+        height: 300px;
+    }
+
+    .task-item {
+        padding: 12px;
+    }
+
+    .task-title {
+        font-size: 15px;
+    }
+
+    .calendar-day {
+        font-size: 11px;
+        padding: 6px 2px;
+        min-height: 50px;
+    }
+
+    .calendar-weekday {
+        font-size: 10px;
+        padding: 4px 1px;
+    }
+
+    .modal-content {
+        padding: 20px 16px;
+    }
+
+    .auth-box {
+        padding: 20px 16px;
+    }
+
+    .btn-google {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 10px 14px;
+        font-size: 14px;
     }
 }
 

@@ -101,11 +101,17 @@
         </div>
     </div>
 
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <i class="fas fa-tasks"></i>
             <h2>TaskMaster</h2>
+            <button id="closeSidebar" class="btn-close-sidebar" aria-label="Close menu">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <nav class="sidebar-nav">
             <a href="#dashboard" class="nav-item active" data-view="dashboard">
@@ -140,6 +146,9 @@
     <!-- Main Content -->
     <main class="main-content">
         <header class="top-bar">
+            <button id="menuToggle" class="btn-menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
             <button id="addTaskBtn" class="btn-primary">
                 <i class="fas fa-plus"></i>
                 Add Task
