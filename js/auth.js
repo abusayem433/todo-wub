@@ -2,6 +2,30 @@
 let phoneNumber = '';
 let phonePassword = '';
 
+// Get server URL - works in both development and production
+// To override in production, set window.API_BASE_URL before loading this script
+// Example: <script>window.API_BASE_URL = 'https://api.yourdomain.com';</script>
+function getServerUrl() {
+    // Check if we have an environment variable or config
+    if (window.API_BASE_URL) {
+        return window.API_BASE_URL;
+    }
+    
+    // In production, use same origin (server serves static files)
+    // In development, use localhost:3000
+    const isProduction = window.location.hostname !== 'localhost' && 
+                        window.location.hostname !== '127.0.0.1' &&
+                        !window.location.hostname.startsWith('192.168.');
+    
+    if (isProduction) {
+        // Production: use same origin
+        return window.location.origin;
+    } else {
+        // Development: use localhost:3000
+        return `${window.location.protocol}//${window.location.hostname}:3000`;
+    }
+}
+
 // Button loading state helpers
 function setButtonLoading(button, loading = true) {
     if (loading) {
@@ -196,10 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Send OTP via SMS
             const message = `Your TaskMaster OTP is ${otp}. Valid for 5 minutes. Do not share with anyone.`;
             
-            // Call backend API to send SMS
-            const serverUrl = window.location.protocol + '//' + window.location.hostname + ':3000';
+            const serverUrl = getServerUrl();
+            const apiUrl = `${serverUrl}/api/send-sms`;
             
-            const smsResponse = await fetch(serverUrl + '/api/send-sms', {
+            const smsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -209,6 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     message: message
                 })
             });
+
+            // Check if response is ok
+            if (!smsResponse.ok) {
+                throw new Error(`Server error: ${smsResponse.status} ${smsResponse.statusText}`);
+            }
 
             const smsResult = await smsResponse.json();
 
@@ -223,7 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('verifyOtpForm').style.display = 'block';
             setButtonLoading(submitBtn, false);
         } catch (error) {
-            showMessage(error.message, 'error');
+            console.error('SMS sending error:', error);
+            // Provide more helpful error messages
+            let errorMessage = error.message;
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMessage = 'Unable to connect to SMS service. Please check your internet connection or contact support.';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'CORS error: Please ensure the API server is properly configured.';
+            }
+            showMessage(errorMessage, 'error');
             setButtonLoading(submitBtn, false);
         }
     });
@@ -255,12 +292,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 .single();
 
             if (otpError || !otpData) {
-                // Increment attempts
-                await supabase
-                    .from('phone_otps')
-                    .update({ attempts: supabase.sql`attempts + 1` })
-                    .eq('phone_number', phoneNumber)
-                    .eq('verified', false);
+                // Try to increment attempts (optional - for tracking)
+                // Note: This requires a database function or we fetch and update
+                try {
+                    const { data: existingOtp } = await supabase
+                        .from('phone_otps')
+                        .select('attempts')
+                        .eq('phone_number', phoneNumber)
+                        .eq('verified', false)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+                    
+                    if (existingOtp) {
+                        await supabase
+                            .from('phone_otps')
+                            .update({ attempts: (existingOtp.attempts || 0) + 1 })
+                            .eq('phone_number', phoneNumber)
+                            .eq('verified', false);
+                    }
+                } catch (err) {
+                    // Ignore attempt tracking errors
+                    console.warn('Could not update attempt count:', err);
+                }
 
                 throw new Error('Invalid or expired OTP code. Please try again.');
             }
@@ -350,9 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Send OTP via SMS
             const message = `Your TaskMaster OTP is ${otp}. Valid for 5 minutes. Do not share with anyone.`;
             
-            const serverUrl = window.location.protocol + '//' + window.location.hostname + ':3000';
+            const serverUrl = getServerUrl();
+            const apiUrl = `${serverUrl}/api/send-sms`;
             
-            const smsResponse = await fetch(serverUrl + '/api/send-sms', {
+            const smsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -363,6 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
+            // Check if response is ok
+            if (!smsResponse.ok) {
+                throw new Error(`Server error: ${smsResponse.status} ${smsResponse.statusText}`);
+            }
+
             const smsResult = await smsResponse.json();
 
             if (!smsResult.success) {
@@ -371,7 +431,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showMessage('📱 OTP resent! Please check your messages.', 'success');
         } catch (error) {
-            showMessage(error.message, 'error');
+            console.error('SMS resend error:', error);
+            // Provide more helpful error messages
+            let errorMessage = error.message;
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMessage = 'Unable to connect to SMS service. Please check your internet connection or contact support.';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'CORS error: Please ensure the API server is properly configured.';
+            }
+            showMessage(errorMessage, 'error');
         } finally {
             setButtonLoading(resendBtn, false);
         }

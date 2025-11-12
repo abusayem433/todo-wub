@@ -149,8 +149,11 @@ app.get('/api/health', (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📱 SMS API ready`);
+const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces for production
+
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 Server running on http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
+    console.log(`📱 SMS API ready at /api/send-sms`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
