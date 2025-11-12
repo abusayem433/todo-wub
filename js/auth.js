@@ -408,7 +408,12 @@ function switchAuthMethod(method) {
 async function checkAuth() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-        window.location.href = 'dashboard.html';
+        // Use relative path to ensure it works on any domain
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('index.html') || currentPath === '/' || currentPath.endsWith('/')) {
+            window.location.href = 'dashboard.html';
+        }
+        // If already on dashboard or other page, don't redirect
     }
 }
 
@@ -430,10 +435,16 @@ async function signInWithGoogle(event) {
     setButtonLoading(button, true);
     
     try {
+        // Get the current origin (works for both localhost and production)
+        const currentOrigin = window.location.origin;
+        const redirectUrl = `${currentOrigin}/dashboard.html`;
+        
+        console.log('OAuth redirect URL:', redirectUrl);
+        
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin + '/dashboard.html',
+                redirectTo: redirectUrl,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',
