@@ -243,6 +243,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log('Attempting to send SMS:', { serverUrl, apiUrl, phone });
             
+            // First, check if server is accessible with a health check
+            try {
+                const healthUrl = `${serverUrl}/api/health`;
+                const healthResponse = await fetch(healthUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!healthResponse.ok) {
+                    console.warn('Health check failed:', healthResponse.status);
+                } else {
+                    const healthData = await healthResponse.json();
+                    console.log('Server health check passed:', healthData);
+                }
+            } catch (healthError) {
+                console.warn('Health check failed (non-critical):', healthError);
+                // Continue anyway - health check is just for diagnostics
+            }
+            
             const smsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -255,7 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }).catch(fetchError => {
                 // Network error (server not reachable)
                 console.error('Network error calling SMS API:', fetchError);
-                throw new Error(`Cannot connect to SMS service. Please ensure the server is running. Error: ${fetchError.message}`);
+                const errorMsg = `Cannot connect to SMS service at ${apiUrl}. `;
+                const troubleshooting = `Please ensure: 1) The server is running (npm start), 2) The server is accessible at ${serverUrl}, 3) CORS is properly configured. `;
+                const configHint = window.API_BASE_URL ? '' : `Tip: You can set window.API_BASE_URL in index.html to point to your API server.`;
+                throw new Error(errorMsg + troubleshooting + configHint);
             });
 
             // Check if response is ok
@@ -290,7 +314,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (smsResponse.status === 500) {
                     errorMessage = `Internal Server Error: ${errorMessage}. Please check server logs or contact support.`;
                 } else if (smsResponse.status === 404) {
-                    errorMessage = `SMS service endpoint not found. Please ensure the server is running and accessible at ${apiUrl}`;
+                    errorMessage = `SMS service endpoint not found at ${apiUrl}. `;
+                    errorMessage += `Possible causes: 1) Server is not running (run 'npm start' in the project directory), `;
+                    errorMessage += `2) Server is running on a different port/domain, `;
+                    errorMessage += `3) Reverse proxy is not routing /api/* requests correctly. `;
+                    if (!window.API_BASE_URL) {
+                        errorMessage += `You can configure the API URL by setting window.API_BASE_URL in index.html.`;
+                    }
                 } else if (smsResponse.status === 0 || smsResponse.status === '') {
                     errorMessage = `Cannot connect to SMS service. The server may not be running or there may be a CORS issue. Server URL: ${apiUrl}`;
                 }
@@ -520,7 +550,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }).catch(fetchError => {
                 // Network error (server not reachable)
                 console.error('Network error calling SMS API (resend):', fetchError);
-                throw new Error(`Cannot connect to SMS service. Please ensure the server is running. Error: ${fetchError.message}`);
+                const errorMsg = `Cannot connect to SMS service at ${apiUrl}. `;
+                const troubleshooting = `Please ensure: 1) The server is running (npm start), 2) The server is accessible at ${serverUrl}, 3) CORS is properly configured. `;
+                const configHint = window.API_BASE_URL ? '' : `Tip: You can set window.API_BASE_URL in index.html to point to your API server.`;
+                throw new Error(errorMsg + troubleshooting + configHint);
             });
 
             // Check if response is ok
@@ -555,7 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (smsResponse.status === 500) {
                     errorMessage = `Internal Server Error: ${errorMessage}. Please check server logs or contact support.`;
                 } else if (smsResponse.status === 404) {
-                    errorMessage = `SMS service endpoint not found. Please ensure the server is running and accessible at ${apiUrl}`;
+                    errorMessage = `SMS service endpoint not found at ${apiUrl}. `;
+                    errorMessage += `Possible causes: 1) Server is not running (run 'npm start' in the project directory), `;
+                    errorMessage += `2) Server is running on a different port/domain, `;
+                    errorMessage += `3) Reverse proxy is not routing /api/* requests correctly. `;
+                    if (!window.API_BASE_URL) {
+                        errorMessage += `You can configure the API URL by setting window.API_BASE_URL in index.html.`;
+                    }
                 } else if (smsResponse.status === 0 || smsResponse.status === '') {
                     errorMessage = `Cannot connect to SMS service. The server may not be running or there may be a CORS issue. Server URL: ${apiUrl}`;
                 }
