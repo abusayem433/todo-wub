@@ -24,7 +24,10 @@ app.post('/api/send-sms', async (req, res) => {
     try {
         const { phoneNumber, message } = req.body;
 
+        console.log('SMS request received:', { phoneNumber, messageLength: message?.length });
+
         if (!phoneNumber || !message) {
+            console.error('Missing required fields:', { phoneNumber: !!phoneNumber, message: !!message });
             return res.status(400).json({ 
                 success: false, 
                 message: 'Phone number and message are required' 
@@ -107,10 +110,15 @@ app.post('/api/send-sms', async (req, res) => {
         }
 
     } catch (error) {
-        console.error('SMS sending error:', error);
+        console.error('SMS sending error:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
         res.status(500).json({ 
             success: false, 
-            message: error.message 
+            message: error.message || 'Internal server error while sending SMS',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
